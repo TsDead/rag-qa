@@ -1,0 +1,9 @@
+[
+  {"q": "When and where was Nimbus Analytics founded?", "expected": "In 2019, in Lisbon, Portugal", "keyword": "2019"},
+  {"q": "How much does the Pro plan cost?", "expected": "99 dollars per month", "keyword": "99"},
+  {"q": "Who is the CEO of the company?", "expected": "Marta Alves", "keyword": "Marta"},
+  {"q": "How much did the company raise in its Series A and from whom?", "expected": "6 million dollars from Fjord Ventures", "keyword": "Fjord"},
+  {"q": "Which data sources does PulseGrid support?", "expected": "Postgres, MySQL and BigQuery", "keyword": "BigQuery"},
+  {"q": "Is there a free trial?", "expected": "Yes, a 14-day free trial with no credit card", "keyword": "14-day"},
+  {"q": "What uptime guarantee do enterprise customers get?", "expected": "99.9 percent uptime", "keyword": "99.9"}
+]
