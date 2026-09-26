@@ -5,84 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAG Q&A — вопросы к документу</title>
 <style>
-  :root{ --bg:#0e1016; --card:#171a22; --line:#272c38; --text:#e7eaf1; --muted:#9aa3b5;
-         --acc:#7c5cff; --acc2:#22d3ee; --green:#34d399; --grad:linear-gradient(120deg,#7c5cff,#22d3ee); }
+  :root{
+    --bg:#0a0a0c; --surface:#141417; --surface2:#1a1a1e; --border:#26262b;
+    --text:#ececed; --muted:#8b8b93; --faint:#5c5c64;
+    --accent:#c9a25b; --accent-dim:#a8843f; --ok:#7fb587; --bad:#c77b7b;
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(900px 500px at 80% -10%,rgba(124,92,255,.15),transparent 60%),var(--bg);
-       color:var(--text);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.5}
-  .wrap{max-width:900px;margin:0 auto;padding:32px 20px 60px}
-  h1{font-size:clamp(23px,4vw,32px);margin:0 0 6px}
-  h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--muted);margin:0 0 22px}
-  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.5px}
-  textarea,input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;
-       color:var(--text);padding:12px 14px;font:inherit;font-size:14px;resize:vertical}
-  textarea{min-height:130px}
-  textarea:focus,input:focus{outline:none;border-color:var(--acc)}
-  .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
-  button{background:var(--grad);color:#0b0d12;border:0;border-radius:11px;padding:11px 20px;font-weight:800;cursor:pointer}
-  button.ghost{background:transparent;border:1px solid var(--line);color:var(--text);font-weight:600}
-  button:hover{filter:brightness(1.08)} button:disabled{opacity:.5}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:20px}
-  .hint{color:var(--muted);font-size:13px}
-  .answer{white-space:pre-wrap;font-size:15px;line-height:1.6}
-  .src{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
-  .src .s{font-size:12.5px;color:var(--muted);margin-bottom:8px}
-  .src .s b{color:var(--acc2)}
-  .metrics{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 14px}
-  .metric{background:#12161f;border:1px solid var(--line);border-radius:12px;padding:12px 16px;flex:1;min-width:140px}
-  .metric .v{font-size:24px;font-weight:800;color:var(--green)}
-  .metric .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .qrow{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
-  .err{color:#f87171;margin-top:12px}
-  .foot{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
-  .foot a{color:var(--acc2);text-decoration:none}
-  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#12161f;border:1px solid var(--line);color:var(--muted);margin-left:6px}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font-family:ui-sans-serif,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+       line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:56px 24px 80px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-size:29px;font-weight:650;letter-spacing:-.02em;margin:10px 0 8px}
+  .lede{color:var(--muted);margin:0 0 36px;max-width:60ch}
+  .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+  textarea,input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;
+       color:var(--text);padding:12px 14px;font:inherit;font-size:14.5px;resize:vertical;transition:border-color .15s}
+  textarea{min-height:128px;line-height:1.5}
+  textarea::placeholder,input::placeholder{color:var(--faint)}
+  textarea:focus,input:focus{outline:none;border-color:var(--accent-dim)}
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  button,.filebtn{font:inherit;font-size:14px;font-weight:600;border-radius:9px;padding:10px 18px;cursor:pointer;border:1px solid transparent;transition:.15s}
+  .primary{background:var(--accent);color:#17130a;border-color:var(--accent)}
+  .primary:hover{background:#d8b06a}
+  .ghost{background:transparent;border-color:var(--border);color:var(--text)}
+  .ghost:hover{border-color:var(--faint);background:var(--surface)}
+  button:disabled{opacity:.45;cursor:default}
+  .filebtn{display:inline-flex;align-items:center;border:1px solid var(--border);color:var(--text);background:transparent}
+  .filebtn:hover{border-color:var(--faint)}
+  .status{font-size:13px;color:var(--muted)}
+  section.block{margin-top:34px;padding-top:30px;border-top:1px solid var(--border)}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:14px}
+  .head h2{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+  .head p{margin:3px 0 0;font-size:13px;color:var(--muted)}
+  .answer{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:16px 18px;margin-top:14px;display:none}
+  .answer.show{display:block}
+  .answer .txt{white-space:pre-wrap;font-size:15px;line-height:1.62}
+  .sources{margin-top:14px;padding-top:13px;border-top:1px solid var(--border)}
+  .sources .cap{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+  .chunk{font-size:13px;color:var(--muted);margin-bottom:7px;padding-left:44px;position:relative;line-height:1.5}
+  .chunk .tag{position:absolute;left:0;top:0;font-family:ui-monospace,'Cascadia Code',monospace;font-size:11.5px;color:var(--accent);border:1px solid var(--border);border-radius:5px;padding:1px 6px}
+  .metrics{display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 18px}
+  .metric{flex:1;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:15px 17px}
+  .metric .v{font-size:27px;font-weight:680;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .metric .l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .qrow{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--border);font-size:14px}
+  .qrow .mk{font-size:13px}
+  .err{color:var(--bad);margin-top:14px;font-size:14px;min-height:1px}
+  footer{margin-top:44px;padding-top:22px;border-top:1px solid var(--border);color:var(--faint);font-size:12.5px}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border)}
+  footer a:hover{color:var(--text)}
+  .mono{font-family:ui-monospace,'Cascadia Code',monospace}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1><span>RAG</span> Q&A <span class="badge" style="-webkit-text-fill-color:initial;color:var(--muted)">grounded answers</span></h1>
-  <p class="sub">Загрузи документ → задавай вопросы → ответ строится ТОЛЬКО по тексту, с указанием источника. Эмбеддинги считаются локально, ответ — на бесплатной LLM.</p>
+  <div class="eyebrow">Retrieval-Augmented Generation</div>
+  <h1>Вопросы к документу</h1>
+  <p class="lede">Загрузите документ, задайте вопрос — ответ строится только по тексту, со ссылкой на источник. Эмбеддинги считаются локально, ответ формирует языковая модель.</p>
 
-  <label>Документ</label>
-  <textarea id="doc" placeholder="Вставь текст документа…"></textarea>
+  <div class="label">Документ</div>
+  <textarea id="doc" placeholder="Вставьте текст документа…"></textarea>
   <div class="row">
-    <button id="index">Проиндексировать</button>
+    <button class="primary" id="index">Проиндексировать</button>
     <button class="ghost" id="loadSample">Загрузить пример</button>
-    <label class="ghost" style="cursor:pointer;padding:11px 20px;border:1px solid var(--line);border-radius:11px;font-size:14px">
-      Загрузить файл (.txt/.pdf)<input type="file" id="file" accept=".txt,.pdf" style="display:none">
-    </label>
-    <span class="hint" id="idxStatus"></span>
+    <label class="filebtn">Файл .txt / .pdf<input type="file" id="file" accept=".txt,.pdf" style="display:none"></label>
+    <span class="status" id="idxStatus"></span>
   </div>
 
-  <div class="card">
-    <label>Вопрос к документу</label>
+  <section class="block">
+    <div class="head"><div><h2>Вопрос</h2><p>Ответ — строго по загруженному тексту</p></div></div>
     <input id="q" placeholder="Например: How much does the Pro plan cost?">
-    <div class="row"><button id="ask">Спросить</button><span class="hint" id="askStatus"></span></div>
-    <div id="ansBox" style="display:none;margin-top:16px">
-      <div class="answer" id="answer"></div>
-      <div class="src" id="sources"></div>
+    <div class="row"><button class="primary" id="ask">Спросить</button><span class="status" id="askStatus"></span></div>
+    <div class="answer" id="ansBox">
+      <div class="txt" id="answer"></div>
+      <div class="sources" id="sources"></div>
     </div>
-  </div>
+  </section>
 
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <div><b>Оценка качества (mini-eval)</b><div class="hint">golden-набор из 7 вопросов + LLM-судья</div></div>
-      <button class="ghost" id="eval">Запустить эвал</button>
+  <section class="block">
+    <div class="head">
+      <div><h2>Оценка качества</h2><p>golden-набор из 7 вопросов и LLM-судья</p></div>
+      <button class="ghost" id="eval">Запустить</button>
     </div>
-    <div id="evalBox" style="display:none;margin-top:14px">
+    <div id="evalBox" style="display:none">
       <div class="metrics">
-        <div class="metric"><div class="v" id="mHit">–</div><div class="l">Retrieval hit-rate</div></div>
-        <div class="metric"><div class="v" id="mAcc">–</div><div class="l">Accuracy (judge)</div></div>
-        <div class="metric"><div class="v" id="mChunks">–</div><div class="l">Чанков</div></div>
+        <div class="metric"><div class="v" id="mHit">—</div><div class="l">Retrieval hit-rate</div></div>
+        <div class="metric"><div class="v" id="mAcc">—</div><div class="l">Accuracy · LLM-judge</div></div>
+        <div class="metric"><div class="v" id="mChunks">—</div><div class="l">Чанков в индексе</div></div>
       </div>
       <div id="evalRows"></div>
     </div>
-  </div>
+  </section>
 
   <div class="err" id="err"></div>
-  <p class="foot">Стек: Python · FastAPI · fastembed (локальные эмбеддинги) · косинус · LLM (Groq). Код: <a href="https://github.com/TsDead/rag-qa" target="_blank">github.com/TsDead/rag-qa</a> · <a href="https://new-coder.ru" target="_blank">new-coder.ru</a></p>
+
+  <footer>
+    Python · FastAPI · fastembed · косинусный поиск · LLM (Groq) &nbsp;·&nbsp;
+    <a href="https://github.com/TsDead/rag-qa" target="_blank">github.com/TsDead/rag-qa</a> &nbsp;·&nbsp;
+    <a href="https://new-coder.ru" target="_blank">new-coder.ru</a>
+  </footer>
 </div>
 
 <script>
@@ -93,10 +116,10 @@
   $('loadSample').onclick = async () => { const d = await (await fetch('/api/sample')).json(); $('doc').value = d.text; };
 
   $('index').onclick = async () => {
-    err(''); if(!$('doc').value.trim()){ err('Вставь документ.'); return; }
+    err(''); if(!$('doc').value.trim()){ err('Вставьте документ.'); return; }
     $('idxStatus').textContent = 'индексирую…';
     const r = await post('/api/ingest', {text:$('doc').value});
-    $('idxStatus').textContent = r.error ? '' : `✅ проиндексировано, чанков: ${r.chunks}`;
+    $('idxStatus').textContent = r.error ? '' : `проиндексировано · чанков ${r.chunks}`;
     if(r.error) err(r.error);
   };
 
@@ -106,29 +129,31 @@
     const fd = new FormData(); fd.append('file', f);
     const r = await (await fetch('/api/upload',{method:'POST',body:fd})).json();
     if(r.error){ err(r.error); $('idxStatus').textContent=''; }
-    else $('idxStatus').textContent = `✅ ${f.name}: чанков ${r.chunks}`;
+    else $('idxStatus').textContent = `${f.name} · чанков ${r.chunks}`;
   };
 
   $('ask').onclick = async () => {
-    err(''); if(!$('q').value.trim()){ err('Введи вопрос.'); return; }
+    err(''); if(!$('q').value.trim()){ err('Введите вопрос.'); return; }
     $('ask').disabled = true; $('askStatus').textContent = 'думаю…';
     const r = await post('/api/ask', {question:$('q').value});
     $('ask').disabled = false; $('askStatus').textContent = '';
     if(r.error){ err(r.error); return; }
     $('answer').textContent = r.answer;
-    $('sources').innerHTML = '<div class="s">Источники (чанки по близости):</div>' +
-      r.sources.map(s => `<div class="s"><b>[${s.n}] ${s.score}</b> — ${s.text.replace(/</g,'&lt;')}…</div>`).join('');
-    $('ansBox').style.display = 'block';
+    $('sources').innerHTML = '<div class="cap">Источники по близости</div>' +
+      r.sources.map(s => `<div class="chunk"><span class="tag">[${s.n}] ${s.score}</span>${s.text.replace(/</g,'&lt;')}…</div>`).join('');
+    $('ansBox').classList.add('show');
   };
 
   $('eval').onclick = async () => {
     err(''); $('eval').disabled = true; $('eval').textContent = 'считаю…';
     const r = await post('/api/eval', {});
-    $('eval').disabled = false; $('eval').textContent = 'Запустить эвал';
-    $('mHit').textContent = (r.retrieval_hit_rate*100).toFixed(0)+'%';
-    $('mAcc').textContent = (r.accuracy*100).toFixed(0)+'%';
+    $('eval').disabled = false; $('eval').textContent = 'Запустить';
+    const col = v => v>=0.85?'var(--ok)':v>=0.6?'var(--accent)':'var(--bad)';
+    $('mHit').textContent = Math.round(r.retrieval_hit_rate*100)+'%'; $('mHit').style.color = col(r.retrieval_hit_rate);
+    $('mAcc').textContent = Math.round(r.accuracy*100)+'%'; $('mAcc').style.color = col(r.accuracy);
     $('mChunks').textContent = r.chunks;
-    $('evalRows').innerHTML = r.rows.map(x => `<div class="qrow">${x.correct?'✅':'❌'} ${x.q.replace(/</g,'&lt;')}</div>`).join('');
+    $('evalRows').innerHTML = r.rows.map(x =>
+      `<div class="qrow"><span class="mk" style="color:${x.correct?'var(--ok)':'var(--bad)'}">${x.correct?'✓':'✕'}</span><span>${x.q.replace(/</g,'&lt;')}</span></div>`).join('');
     $('evalBox').style.display = 'block';
   };
 </script>
