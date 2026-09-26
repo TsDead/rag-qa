@@ -22,6 +22,7 @@ class IngestReq(BaseModel):
 
 class AskReq(BaseModel):
     question: str
+    k: int = 4
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -66,7 +67,7 @@ def ask(r: AskReq):
         return {"error": "Пустой вопрос."}
     if not rag.stats()["indexed"]:
         return {"error": "Сначала загрузи документ."}
-    return rag.answer(r.question)
+    return rag.answer(r.question, max(1, min(r.k, 8)))
 
 
 @app.post("/api/eval")
